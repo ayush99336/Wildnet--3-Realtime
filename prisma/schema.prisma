@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Pool {
+    id          Int      @id @default(autoincrement())
+    tokenA      String
+    tokenB      String
+    poolAddress String   @unique
+    timestamp   DateTime @default(now())
+    source      String // "raydium", "orca", etc.
+    signature   String   @unique
+    apy         Float? // APY from DefiLlama
+    tvl         Float? // Total Value Locked
+    volume24h   Float? // 24h volume
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // Relations
+    events PoolEvent[]
+
+    @@map("pools")
+}
+
+model PoolEvent {
+    id        Int      @id @default(autoincrement())
+    poolId    Int
+    pool      Pool     @relation(fields: [poolId], references: [id])
+    eventType String // "created", "liquidity_added", "swap", etc.
+    amount    Float?
+    timestamp DateTime @default(now())
+    signature String   @unique
+    rawData   String? // Store raw transaction data as JSON string
+
+    @@map("pool_events")
+}
